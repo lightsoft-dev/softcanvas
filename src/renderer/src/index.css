@@ -1,0 +1,244 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1f2430;
+  --border: #2a2f3a;
+  --text: #e6e8ee;
+  --muted: #8b93a7;
+  --accent: #4f8cff;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --err: #f85149;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  width: 100%;
+}
+
+/* ---------- Project panel ---------- */
+.project-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  height: 100%;
+  overflow: hidden;
+}
+.project-panel__header h1 {
+  font-size: 15px;
+  margin: 0 0 10px;
+  letter-spacing: 0.3px;
+}
+.project-panel__name {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.project-panel__devserver {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.project-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-panel__row code {
+  font-size: 11px;
+  color: var(--accent);
+  word-break: break-all;
+}
+.project-panel__log {
+  flex: 1;
+  margin: 0;
+  padding: 8px;
+  background: #0b0d12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+/* dev server status pill */
+.status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border: 1px solid var(--border);
+}
+.status--stopped {
+  color: var(--muted);
+}
+.status--starting {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.status--ready {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.status--error {
+  color: var(--err);
+  border-color: var(--err);
+}
+
+/* ---------- Settings panel ---------- */
+.settings-panel__toggle {
+  width: 100%;
+  text-align: left;
+}
+.settings-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.settings-panel__body label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---------- Screen node ---------- */
+.screen-node {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+.screen-node.selected {
+  border-color: var(--accent);
+}
+.screen-node__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+}
+.screen-node__bar .title {
+  flex: 1;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.screen-node__bar button {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+.badge {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: 0 0 auto;
+}
+.badge--idle {
+  background: var(--muted);
+}
+.badge--loading {
+  background: var(--warn);
+}
+.badge--ready {
+  background: var(--ok);
+}
+.badge--error {
+  background: var(--err);
+}
+.screen-node__body {
+  background: #fff;
+}
+.screen-node__body webview {
+  border: 0;
+}
+.screen-node__placeholder--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 13px;
+}
+.screen-node__placeholder--empty small {
+  font-size: 10px;
+  word-break: break-all;
+  padding: 0 12px;
+  text-align: center;
+}
+
+/* React Flow surface */
+.react-flow {
+  background: var(--bg);
+}

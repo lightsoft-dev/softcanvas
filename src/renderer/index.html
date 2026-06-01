@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>softcanvas</title>
+    <!--
+      CSP for the TRUSTED renderer only. <webview> embeds run in their own
+      WebContents and are NOT governed by this policy (that is exactly why we
+      use <webview> — see build spec §3). 'unsafe-inline' on style-src is
+      required by React Flow's injected styles. No remote script/connect
+      origins in dev other than the Vite HMR websocket.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: blob:;
+        font-src 'self' data:;
+        connect-src 'self' ws: http://localhost:* http://127.0.0.1:*;
+        frame-src http://localhost:* http://127.0.0.1:*;
+      "
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
