@@ -18,15 +18,20 @@ interface WebviewEl extends HTMLElement {
 function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
   const d = data as ScreenNodeData
   const ref = useRef<WebviewEl | null>(null)
+  const domReadyRef = useRef(false)
   const [status, setStatus] = useState<Status>('idle')
   const [title, setTitle] = useState('')
   const live = useNearViewport(id)
   const setNodeScreenshot = useAppStore((s) => s.setNodeScreenshot)
+  const devUrl = useAppStore((s) => s.devUrl)
 
   const attachEvents = useCallback((el: WebviewEl) => {
     const onStart = (): void => setStatus('loading')
     const onStop = (): void => setStatus((s) => (s === 'error' ? 'error' : 'ready'))
-    const onDomReady = (): void => setStatus('ready')
+    const onDomReady = (): void => {
+      domReadyRef.current = true
+      setStatus('ready')
+    }
     const onFail = (e: { isMainFrame?: boolean }): void => {
       if (e.isMainFrame !== false) setStatus('error')
     }
@@ -47,28 +52,58 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
 
   useEffect(() => {
     if (!live || !ref.current) return
+    domReadyRef.current = false
     return attachEvents(ref.current)
   }, [live, attachEvents])
 
-  // Capture a screenshot just before the webview unmounts (live -> false).
+  // Capture a screenshot just before the webview unmounts (live -> false) so the
+  // virtualized placeholder shows the last frame.
   const capturedRef = useRef<WebviewEl | null>(null)
   useEffect(() => {
     if (live && ref.current) capturedRef.current = ref.current
     return () => {
       const el = capturedRef.current
-      if (el?.capturePage) {
+      // capturePage() THROWS synchronously if the webview is detached or has
+      // not emitted dom-ready. Guard + try/catch so a virtualization toggle or
+      // unmount can never crash the node (there is no error boundary per node).
+      if (!el || !domReadyRef.current || typeof el.capturePage !== 'function') return
+      try {
         el.capturePage()
           .then((img) => setNodeScreenshot(id, img.toDataURL()))
           .catch(() => {})
+      } catch {
+        /* webview detached / not dom-ready — skip screenshot */
       }
     }
   }, [live, id, setNodeScreenshot])
 
-  const reload = (): void => ref.current?.reload()
+  // When the dev server (re)becomes ready, reload the embed so nodes that were
+  // restored/added while the server was down (ERR_CONNECTION_REFUSED) load on
+  // their own — no manual ↻ needed.
+  useEffect(() => {
+    if (!devUrl || !ref.current) return
+    try {
+      ref.current.reload()
+    } catch {
+      /* webview not attached yet — it will load src on mount anyway */
+    }
+  }, [devUrl])
+
+  const reload = (): void => {
+    try {
+      ref.current?.reload()
+    } catch {
+      /* not ready */
+    }
+  }
   const toggleDevTools = (): void => {
     const el = ref.current
     if (!el) return
-    el.isDevToolsOpened() ? el.closeDevTools() : el.openDevTools()
+    try {
+      el.isDevToolsOpened() ? el.closeDevTools() : el.openDevTools()
+    } catch {
+      /* not ready */
+    }
   }
 
   return (
@@ -102,7 +137,6 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
             ref={ref as never}
             src={d.url}
             partition={`persist:screen-${id}`}
-            allowpopups={false}
             style={{ width: '100%', height: '100%', display: 'inline-flex' }}
           />
         ) : d.screenshot ? (
