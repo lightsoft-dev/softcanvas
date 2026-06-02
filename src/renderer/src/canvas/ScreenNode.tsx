@@ -24,6 +24,10 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
   const live = useNearViewport(id)
   const setNodeScreenshot = useAppStore((s) => s.setNodeScreenshot)
   const devUrl = useAppStore((s) => s.devUrl)
+  const reloadToken = useAppStore((s) => s.reloadToken)
+  const setEditTarget = useAppStore((s) => s.setEditTarget)
+  const editTarget = useAppStore((s) => s.editTarget)
+  const isEditTarget = editTarget.type === 'screen' && editTarget.route === d.route
 
   const attachEvents = useCallback((el: WebviewEl) => {
     const onStart = (): void => setStatus('loading')
@@ -89,6 +93,16 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
     }
   }, [devUrl])
 
+  // Reload after the edit agent finishes (belt-and-suspenders on top of HMR).
+  useEffect(() => {
+    if (reloadToken === 0 || !ref.current) return
+    try {
+      ref.current.reload()
+    } catch {
+      /* not attached */
+    }
+  }, [reloadToken])
+
   const reload = (): void => {
     try {
       ref.current?.reload()
@@ -108,7 +122,7 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
 
   return (
     <div
-      className={`screen-node ${selected ? 'selected' : ''}`}
+      className={`screen-node ${selected ? 'selected' : ''} ${isEditTarget ? 'edit-target' : ''}`}
       style={{ width: d.width, height: d.height }}
     >
       <NodeResizer minWidth={240} minHeight={320} isVisible={selected} />
@@ -117,7 +131,14 @@ function ScreenNodeImpl({ id, data, selected }: NodeProps): JSX.Element {
           happens via this header (node.dragHandle = '.drag-handle' set in nodeTypes). */}
       <header className="screen-node__bar drag-handle">
         <span className={`badge badge--${status}`} />
-        <span className="title">{title || d.route}</span>
+        <span className="title">{title || d.title || d.route}</span>
+        <button
+          className="nodrag"
+          onClick={() => setEditTarget({ type: 'screen', route: d.route, filePath: d.filePath })}
+          title="Edit this screen with AI"
+        >
+          ✏️
+        </button>
         <button className="nodrag" onClick={reload} title="Reload">
           ↻
         </button>

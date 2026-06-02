@@ -13,7 +13,9 @@ import type {
   DevServerStatus,
   ScreenNodeData,
   AppSettings,
-  CanvasLayout
+  CanvasLayout,
+  DiscoveredScreen,
+  EditScope
 } from '../types'
 
 export type ScreenNode = Node<ScreenNodeData, 'screen'>
@@ -44,7 +46,20 @@ interface AppState {
   onEdgesChange: (changes: EdgeChange[]) => void
   setViewport: (v: Viewport) => void
   addScreenNode: (route: string, baseUrl: string) => void
+  addScreens: (screens: DiscoveredScreen[], baseUrl: string) => number
   setNodeScreenshot: (id: string, dataUrl: string) => void
+
+  // discovery
+  discovering: boolean
+  setDiscovering: (b: boolean) => void
+
+  // edit agent
+  editTarget: EditScope
+  setEditTarget: (t: EditScope) => void
+  editing: boolean
+  setEditing: (b: boolean) => void
+  reloadToken: number
+  bumpReload: () => void
   hydrateCanvas: (layout: CanvasLayout) => void
   resetCanvas: () => void
 }
@@ -94,12 +109,57 @@ export const useAppStore = create<AppState>((set) => ({
       return { nodes: [...s.nodes, node] }
     }),
 
+  addScreens: (screens, baseUrl) => {
+    const COLS = 4
+    const W = DEFAULT_NODE_SIZE.width
+    const H = DEFAULT_NODE_SIZE.height
+    const GAP = 48
+    let added = 0
+    set((s) => {
+      const existing = new Set(s.nodes.map((n) => n.data.route))
+      const fresh = screens.filter((sc) => !existing.has(sc.route))
+      added = fresh.length
+      const base = s.nodes.length
+      const newNodes: ScreenNode[] = fresh.map((sc, i) => {
+        const idx = base + i
+        const col = idx % COLS
+        const row = Math.floor(idx / COLS)
+        let url = baseUrl
+        try {
+          url = new URL(sc.route, baseUrl).toString()
+        } catch {
+          /* keep baseUrl */
+        }
+        return {
+          id: `screen-${crypto.randomUUID()}`,
+          type: 'screen',
+          position: { x: col * (W + GAP), y: row * (H + GAP) },
+          width: W,
+          height: H,
+          data: { url, route: sc.route, title: sc.title, filePath: sc.filePath, width: W, height: H }
+        }
+      })
+      return { nodes: [...s.nodes, ...newNodes] }
+    })
+    return added
+  },
+
   setNodeScreenshot: (id, dataUrl) =>
     set((s) => ({
       nodes: s.nodes.map((n) =>
         n.id === id ? { ...n, data: { ...n.data, screenshot: dataUrl } } : n
       )
     })),
+
+  discovering: false,
+  setDiscovering: (discovering) => set({ discovering }),
+
+  editTarget: { type: 'project' },
+  setEditTarget: (editTarget) => set({ editTarget }),
+  editing: false,
+  setEditing: (editing) => set({ editing }),
+  reloadToken: 0,
+  bumpReload: () => set((s) => ({ reloadToken: s.reloadToken + 1 })),
 
   hydrateCanvas: (layout) =>
     set({

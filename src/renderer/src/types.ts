@@ -41,7 +41,34 @@ export type ScreenNodeData = {
   route: string
   width: number
   height: number
+  title?: string
+  filePath?: string
   screenshot?: string
+}
+
+export interface DiscoveredScreen {
+  route: string
+  title: string
+  filePath?: string
+}
+export interface DiscoverResult {
+  ok: boolean
+  screens: DiscoveredScreen[]
+  error?: string
+}
+export interface DiscoveryProgressEvent {
+  line: string
+}
+
+export type EditScope = { type: 'project' } | { type: 'screen'; route: string; filePath?: string }
+export interface EditOutcome {
+  ok: boolean
+  summary: string
+  changedFiles: string[]
+  error?: string
+}
+export interface EditProgressEvent {
+  line: string
 }
 export interface PersistedNode {
   id: string

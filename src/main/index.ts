@@ -4,6 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerDialogIpc } from './dialog-ipc'
 import { registerStoreIpc } from './store-ipc'
 import { registerDevServerIpc, disposeDevServer } from './devserver-ipc'
+import { registerDiscoveryIpc } from './discovery-ipc'
+import { registerEditorIpc } from './editor-ipc'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -48,6 +50,8 @@ app.whenReady().then(() => {
   registerDialogIpc()
   registerStoreIpc()
   registerDevServerIpc(() => mainWindow)
+  registerDiscoveryIpc(() => mainWindow)
+  registerEditorIpc(() => mainWindow)
 
   createWindow()
 

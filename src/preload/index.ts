@@ -8,7 +8,12 @@ import type {
   DevServerExitEvent,
   DevServerErrorEvent,
   CanvasLayout,
-  AppSettings
+  AppSettings,
+  DiscoverResult,
+  DiscoveryProgressEvent,
+  EditScope,
+  EditOutcome,
+  EditProgressEvent
 } from './index.d'
 
 type Unsub = () => void
@@ -45,7 +50,23 @@ const api = {
     ipcRenderer.invoke('store:saveLayout', { projectKey, layout }),
   loadSettings: (): Promise<AppSettings> => ipcRenderer.invoke('store:loadSettings'),
   saveSettings: (settings: AppSettings): Promise<{ saved: true }> =>
-    ipcRenderer.invoke('store:saveSettings', { settings })
+    ipcRenderer.invoke('store:saveSettings', { settings }),
+
+  // ---- AI screen discovery ----
+  runDiscovery: (projectPath: string): Promise<DiscoverResult> =>
+    ipcRenderer.invoke('discovery:run', { projectPath }),
+  cancelDiscovery: (): Promise<{ cancelled: true }> => ipcRenderer.invoke('discovery:cancel'),
+  onDiscoveryProgress: (cb: (p: DiscoveryProgressEvent) => void): Unsub =>
+    subscribe('discovery:progress', cb),
+
+  // ---- AI edit agent ----
+  runEdit: (req: {
+    projectPath: string
+    prompt: string
+    scope: EditScope
+  }): Promise<EditOutcome> => ipcRenderer.invoke('edit:run', req),
+  cancelEdit: (): Promise<{ cancelled: true }> => ipcRenderer.invoke('edit:cancel'),
+  onEditProgress: (cb: (p: EditProgressEvent) => void): Unsub => subscribe('edit:progress', cb)
 }
 
 if (process.contextIsolated) {

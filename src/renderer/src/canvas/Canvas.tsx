@@ -78,6 +78,8 @@ function CanvasInner(): JSX.Element {
           data: {
             url: n.data.url,
             route: n.data.route,
+            title: n.data.title,
+            filePath: n.data.filePath,
             width: n.data.width,
             height: n.data.height,
             screenshot: n.data.screenshot

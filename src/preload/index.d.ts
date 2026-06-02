@@ -38,7 +38,34 @@ export interface ScreenNodeData {
   route: string
   width: number
   height: number
+  title?: string
+  filePath?: string
   screenshot?: string
+}
+
+export interface DiscoveredScreen {
+  route: string
+  title: string
+  filePath?: string
+}
+export interface DiscoverResult {
+  ok: boolean
+  screens: DiscoveredScreen[]
+  error?: string
+}
+export interface DiscoveryProgressEvent {
+  line: string
+}
+
+export type EditScope = { type: 'project' } | { type: 'screen'; route: string; filePath?: string }
+export interface EditOutcome {
+  ok: boolean
+  summary: string
+  changedFiles: string[]
+  error?: string
+}
+export interface EditProgressEvent {
+  line: string
 }
 export interface PersistedNode {
   id: string
@@ -79,6 +106,12 @@ export interface SoftcanvasApi {
   saveLayout(projectKey: string, layout: CanvasLayout): Promise<{ saved: true }>
   loadSettings(): Promise<AppSettings>
   saveSettings(settings: AppSettings): Promise<{ saved: true }>
+  runDiscovery(projectPath: string): Promise<DiscoverResult>
+  cancelDiscovery(): Promise<{ cancelled: true }>
+  onDiscoveryProgress(cb: (p: DiscoveryProgressEvent) => void): Unsub
+  runEdit(req: { projectPath: string; prompt: string; scope: EditScope }): Promise<EditOutcome>
+  cancelEdit(): Promise<{ cancelled: true }>
+  onEditProgress(cb: (p: EditProgressEvent) => void): Unsub
 }
 
 declare global {
